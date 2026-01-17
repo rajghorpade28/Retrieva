@@ -575,11 +575,12 @@
 
         class RAGWorkerClient {
             constructor() {
-                this.worker = new Worker('/static/worker.js?v=' + (Date.now() + 5), {
+                this.worker = new Worker('./worker.js?v=' + (Date.now() + 5), {
                     type: 'module'
                 });
                 this.pending = new Map(); // msgId -> {resolve, reject}
                 this.msgIdCounter = 0;
+                this.isModelReady = false;
 
                 this.worker.onmessage = (e) => {
                     const {
@@ -615,6 +616,26 @@
 
                 // Default progress handler
                 this.onProgress = (msg) => console.log(msg);
+
+                // Notify user that model is pre-loading
+                this.notifyModelPreload();
+            }
+
+            notifyModelPreload() {
+                // Show a subtle notification that the model is loading
+                const statusMsg = document.getElementById('statusMsg');
+                if (statusMsg) {
+                    statusMsg.textContent = "⚡ Initializing AI model in background...";
+                    statusMsg.style.color = "var(--accent-primary)";
+                    statusMsg.style.fontSize = "0.9rem";
+
+                    // Clear after 3 seconds
+                    setTimeout(() => {
+                        if (statusMsg.textContent.includes("Initializing")) {
+                            statusMsg.textContent = "";
+                        }
+                    }, 3000);
+                }
             }
 
             post(type, data, onProgress) {
@@ -975,6 +996,20 @@
             item.innerHTML = `<span class="history-icon" style="margin-right:8px">📄</span>${filename}`;
 
             historySection.appendChild(item);
+        }
+
+
+        // Register Service Worker for caching models
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
         }
 
     </script>

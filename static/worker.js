@@ -10,8 +10,22 @@ class RAGWorker {
     constructor() {
         this.embedder = null;
         this.vectorStore = [];
-        this.chunkSize = 150;
-        this.overlap = 20;
+        // Optimized: Larger chunks = fewer total chunks = faster processing
+        this.chunkSize = 500;  // Increased from 150
+        this.overlap = 50;     // Proportional overlap
+        this.batchSize = 10;   // Process chunks in batches
+
+        // Pre-warm the model on worker initialization
+        this.initializeModel();
+    }
+
+    async initializeModel() {
+        try {
+            // Silently pre-load the model in the background
+            await this.lazyLoadEmbedder(() => { });
+        } catch (err) {
+            console.warn('Model pre-warming failed, will load on demand:', err);
+        }
     }
 
     async lazyLoadEmbedder(progressCallback) {
@@ -23,12 +37,15 @@ class RAGWorker {
     }
 
     async handleIngest(fileData) {
-        self.postMessage({ type: 'progress', message: 'Loading embedding model...' });
-        await this.lazyLoadEmbedder((x) => {
-            if (x.status === 'progress') {
-                self.postMessage({ type: 'progress', message: `Loading model: ${Math.round(x.progress || 0)}%` });
-            }
-        });
+        // Model should already be loaded from initialization
+        if (!this.embedder) {
+            self.postMessage({ type: 'progress', message: 'Loading embedding model...' });
+            await this.lazyLoadEmbedder((x) => {
+                if (x.status === 'progress') {
+                    self.postMessage({ type: 'progress', message: `Loading model: ${Math.round(x.progress || 0)}%` });
+                }
+            });
+        }
 
         self.postMessage({ type: 'progress', message: 'Chunking text...' });
         const chunks = this.chunkText(fileData.text);
@@ -36,21 +53,32 @@ class RAGWorker {
         this.vectorStore = [];
 
         const total = chunks.length;
-        for (let i = 0; i < total; i++) {
-            const chunk = chunks[i];
-            const output = await this.embedder(chunk, { pooling: 'mean', normalize: true });
-            this.vectorStore.push({
-                text: chunk,
-                embedding: output.data,
-                source: fileData.filename
-            });
 
-            if (i % 5 === 0 || i === total - 1) {
-                self.postMessage({
-                    type: 'progress',
-                    message: `Embedding chunks: ${Math.round(((i + 1) / total) * 100)}%`
+        // Batch processing for better performance
+        for (let i = 0; i < total; i += this.batchSize) {
+            const batchEnd = Math.min(i + this.batchSize, total);
+            const batch = chunks.slice(i, batchEnd);
+
+            // Process batch in parallel
+            const embeddings = await Promise.all(
+                batch.map(chunk => this.embedder(chunk, { pooling: 'mean', normalize: true }))
+            );
+
+            // Store results
+            for (let j = 0; j < batch.length; j++) {
+                this.vectorStore.push({
+                    text: batch[j],
+                    embedding: embeddings[j].data,
+                    source: fileData.filename
                 });
             }
+
+            // Update progress less frequently (every batch instead of every 5 chunks)
+            const processed = i + batch.length;
+            self.postMessage({
+                type: 'progress',
+                message: `Embedding chunks: ${Math.round((processed / total) * 100)}%`
+            });
         }
 
         return {
@@ -80,11 +108,11 @@ class RAGWorker {
         }));
 
         scored.sort((a, b) => b.score - a.score);
-        // Reduce context to top 2 to save tokens and processing time
-        const results = scored.slice(0, 2);
+        // Optimized: Use top 3 chunks with larger context window
+        const results = scored.slice(0, 3);
 
-        // Limit context to 500 chars max 
-        const contextText = results.map(r => r.text).join(" ").slice(0, 500);
+        // Increased context to 1000 chars for better answers with larger chunks
+        const contextText = results.map(r => r.text).join(" ").slice(0, 1000);
 
         // Prompt
         // Strict Prompt with Summarization capability
