@@ -1,5 +1,7 @@
 # Retrieva
 
+🚀 **[Live Demo](https://retrieva-one.vercel.app/)** | 📖 [Documentation](#system-architecture)
+
 ## Overview
 This project is a lightweight, web-based Retrieval-Augmented Generation (RAG) application designed to perform document analysis and question answering primarily within the client's browser. Unlike traditional server-heavy RAG implementations, this system leverages Web Workers and in-browser machine learning libraries to handle text processing, embedding generation, and vector retrieval on the client side.
 
