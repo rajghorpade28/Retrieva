@@ -24,9 +24,13 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
+            background-color: var(--bg);
+            color: var(--text);
             overflow-x: hidden;
             line-height: 1.6;
         }
@@ -67,7 +71,7 @@
         }
 
         .nav-links a:hover {
-            color: var(--text-primary);
+            color: var(--text);
         }
 
         /* Hero */
@@ -126,17 +130,36 @@
         }
 
         .cta-button {
-            background: var(--text-primary);
-            color: var(--bg-dark);
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
             padding: 1rem 2.5rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 50px;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-cta {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
 
         .cta-button:hover {
@@ -215,42 +238,46 @@
         }
 
         .contact-form {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2.5rem;
-            border-radius: 20px;
+            background: rgba(30, 41, 59, 0.8);
+            /* Slightly darker/more opaque */
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 3rem;
+            border-radius: 24px;
             margin-top: 2rem;
             text-align: left;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 1.1rem;
+            /* Larger font */
+            font-weight: 500;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 1rem;
-            background: rgba(15, 23, 42, 0.6);
+            padding: 1.2rem;
+            /* Comfortable padding */
+            background: rgba(15, 23, 42, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border-radius: 16px;
             color: white;
             font-family: inherit;
-            transition: border-color 0.3s;
+            font-size: 1.1rem;
+            /* Larger font */
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
         .submit-btn {
@@ -258,11 +285,14 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 1rem;
-            border-radius: 12px;
-            font-weight: 600;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            /* Larger button text */
             cursor: pointer;
             transition: transform 0.2s, background-color 0.2s;
+            margin-top: 1rem;
         }
 
         .submit-btn:hover {
@@ -307,9 +337,7 @@
             Retrieva
         </div>
         <div class="nav-links">
-            <a href="#contact"
-                style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; margin-right: 1rem; transition: color 0.2s;">Get
-                in Touch</a>
+            <a href="#contact" class="nav-cta">Get in Touch</a>
         </div>
     </nav>
 
