@@ -1209,6 +1209,10 @@
         window.resetChat = function () {
             currentSessionId = null;
 
+            // Close mobile sidebar if open
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            if (sidebarToggle) sidebarToggle.checked = false;
+
             // Reset UI
             uploadContainer.style.display = 'block';
             setTimeout(() => uploadContainer.style.opacity = '1', 10);
