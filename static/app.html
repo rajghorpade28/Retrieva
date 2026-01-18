@@ -795,9 +795,9 @@
         </div>
         <!-- API Key Modal -->
         <div id="apiModal"
-            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 1rem;">
             <div
-                style="background: var(--bg-sidebar); padding: 2rem; border-radius: 20px; width: 90%; max-width: 550px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease;">
+                style="background: var(--bg-sidebar); padding: 1.5rem; border-radius: 20px; width: 100%; max-width: 550px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; max-height: 90vh; display: flex; flex-direction: column;">
                 <h2
                     style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
                     <span>🔑</span>Manage API Keys
@@ -809,12 +809,12 @@
 
                 <!-- List of Saved Keys -->
                 <div id="keyList"
-                    style="max-height: 200px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-body);">
+                    style="flex: 1; min-height: 100px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-body);">
                     <!-- Dynamic Items -->
                 </div>
 
                 <!-- Add New Key Form -->
-                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; flex-shrink: 0;">
                     <h3 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">Add New Key</h3>
 
                     <div class="input-wrapper" style="margin: 0 0 0.8rem 0; padding: 0.8rem 1rem;">
