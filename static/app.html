@@ -988,17 +988,16 @@
 
         // State Management
         let currentSessionId = null;
-        // Changed: Do not load from localStorage. Start fresh on every refresh.
-        let sessions = {};
+        // Changed: Load from localStorage to restore persistence.
+        let sessions = JSON.parse(localStorage.getItem('retrieva_sessions') || '{}');
 
         // ... (lines 981 - 1269 irrelevant to change) ...
 
         // --- Session Management ---
 
         function saveSessions() {
-            // Disabled persistence to localStorage as requested.
-            // Data remains only in memory (variable 'sessions').
-            // localStorage.setItem('retrieva_sessions', JSON.stringify(sessions));
+            // Restore persistence to localStorage.
+            localStorage.setItem('retrieva_sessions', JSON.stringify(sessions));
         }
 
         const fileInput = document.getElementById('fileInput');
@@ -1329,15 +1328,64 @@
             sortedSessions.forEach(session => {
                 const item = document.createElement('div');
                 item.className = 'history-item';
+                // Add flex layout for delete button
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.alignItems = 'center';
+
                 if (currentSessionId === session.id) {
                     item.style.backgroundColor = 'rgba(125,125,125,0.2)';
-                    item.classList.add('active'); // For styling hooks if needed
+                    item.classList.add('active');
                 }
-                item.innerHTML = `<span class="history-icon" style="margin-right:8px">📄</span>${session.filename}`;
+
+                // Name Span
+                const nameSpan = document.createElement('span');
+                nameSpan.innerHTML = `<span class="history-icon" style="margin-right:8px">📄</span>${session.filename}`;
+                nameSpan.style.overflow = 'hidden';
+                nameSpan.style.whiteSpace = 'nowrap';
+                nameSpan.style.textOverflow = 'ellipsis';
+                nameSpan.style.flex = '1';
+
+                // Delete Button
+                const delBtn = document.createElement('span');
+                delBtn.innerHTML = '🗑️'; // or SVG
+                delBtn.style.cursor = 'pointer';
+                delBtn.style.opacity = '0.6';
+                delBtn.style.fontSize = '0.9rem';
+                delBtn.style.marginLeft = '8px';
+                delBtn.title = 'Delete Chat';
+
+                delBtn.onmouseover = () => delBtn.style.opacity = '1';
+                delBtn.onmouseout = () => delBtn.style.opacity = '0.6';
+
+                // Delete Action
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent opening the chat
+                    if (confirm('Delete this chat history?')) {
+                        deleteSession(session.id);
+                    }
+                });
+
+                item.appendChild(nameSpan);
+                item.appendChild(delBtn);
 
                 item.addEventListener('click', () => loadSession(session.id));
                 historySection.appendChild(item);
             });
+        }
+
+        function deleteSession(sessionId) {
+            if (sessions[sessionId]) {
+                delete sessions[sessionId];
+                saveSessions();
+
+                // If we deleted the active session, reset to home
+                if (currentSessionId === sessionId) {
+                    resetChat();
+                } else {
+                    renderSessionList(); // Just update list
+                }
+            }
         }
 
         function loadSession(sessionId) {
