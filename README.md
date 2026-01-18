@@ -13,7 +13,7 @@ Retrieva is a privacy-focused document Q&A application that runs **100% in your 
 ### Client-Side Processing Flow
 
 1. **Document Upload & Parsing**
-   - Files (PDF, DOCX, TXT) are parsed in the browser using `pdf.js` and `mammoth.js`
+   - Files (PDF, DOCX, TXT, Code) are parsed in the browser using `pdf.js` and `mammoth.js`
    - No data is sent to any server during this step
 
 2. **Text Chunking (Web Worker)**
@@ -25,8 +25,7 @@ Retrieva is a privacy-focused document Q&A application that runs **100% in your 
    - Uses `Transformers.js` to run the `all-MiniLM-L6-v2` model locally
    - Converts each text chunk into a 384-dimensional vector
    - **Optimized:** Batch processing (10 chunks at a time) for 3-5x faster embedding
-   - **Optimized:** Model pre-warms on page load for instant first upload
-   - All embeddings are stored in browser memory
+   - **Persistence:** Vectors are saved to **IndexedDB**, allowing you to close and reopen the browser without re-processing documents.
 
 4. **Query Processing**
    - User questions are embedded using the same local model
@@ -49,6 +48,10 @@ Retrieva is a privacy-focused document Q&A application that runs **100% in your 
 - Web Workers for background processing
 - Transformers.js for in-browser ML
 
+**Storage (Client-Side Only):**
+- **IndexedDB**: Persistent vector storage (documents stay ready even after refresh)
+- **localStorage**: Chat history and API Key storage
+
 **Libraries:**
 - `@xenova/transformers` - Local embedding model
 - `pdf.js` - PDF parsing
@@ -61,10 +64,10 @@ Retrieva is a privacy-focused document Q&A application that runs **100% in your 
 
 ✅ **100% Client-Side Processing** - Documents never leave your browser  
 ✅ **Privacy-First** - Only query context is sent to the LLM, not full documents  
-✅ **No Backend Required** - Runs as a static site  
+✅ **Persistent Sessions** - Chats and documents are saved locally. Resume where you left off.  
 ✅ **Offline Embedding** - ML model runs locally in your browser  
-✅ **Modern UI** - Dark/light mode with glassmorphism design  
-✅ **BYOK (Bring Your Own Key)** - Use your own Gemini API key  
+✅ **Modern UI** - Dark/light mode with sleek glassmorphism design  
+✅ **Multi-Key Management** - Store and manage multiple Gemini API keys securely  
 ✅ **High Performance** - 75-85% faster document processing with optimizations
 
 ## Performance
@@ -98,25 +101,26 @@ Visit **[retrieva-one.vercel.app](https://retrieva-one.vercel.app/)** to try it 
    cd Retrieva
    ```
 
-2. **Install dependencies:**
+2. **Run the Static Server:**
+   Since Retrieva is a client-side app, you just need to serve the `static` folder.
+   
+   Using Python (simplest):
    ```bash
-   pip install -r api_or_cli/requirements.txt
+   cd static
+   python -m http.server 8000
    ```
+   
+   Or usage any other static server (e.g., `live-server`, `npx serve`).
 
-3. **Run the server:**
-   ```bash
-   uvicorn api_or_cli.main:app --reload
-   ```
+3. **Open in browser:**
+   Navigate to `http://localhost:8000/index.html`
 
-4. **Open in browser:**
-   Navigate to `http://127.0.0.1:8000`
-
-5. **Add your Gemini API key:**
-   - Click the 🔑 icon in the top right
+4. **Add your Gemini API key:**
+   - Click the 🔑 icon in the navbar (on the app page)
    - Enter your API key (get one at [ai.google.dev](https://ai.google.dev))
-   - The key is stored in your browser's localStorage
+   - The key is stored locally in your browser
 
-6. **Upload and query:**
+5. **Upload and query:**
    - Upload a PDF, DOCX, or TXT file
    - Wait for processing to complete
    - Ask questions about your document
@@ -124,17 +128,17 @@ Visit **[retrieva-one.vercel.app](https://retrieva-one.vercel.app/)** to try it 
 ## Privacy & Security
 
 - **Local Processing:** All document parsing and embedding happens in your browser
-- **Stateless:** No data is stored on any server
-- **Ephemeral Storage:** Vectors are cleared when you refresh the page
-- **Minimal Data Transfer:** Only the top 2 relevant chunks (max 500 chars) are sent to Gemini
-- **BYOK Model:** Your API key is used directly from the browser (stored in localStorage)
+- **Stateless Server:** No data is stored on any backend server
+- **Persistent Local Data:** Vectors and chat history are stored in your browser's `IndexedDB` and `localStorage` for your convenience. You can delete them at any time via the UI.
+- **Minimal Data Transfer:** Only the top relevant chunks (max 1000 chars) are sent to Gemini
+- **BYOK Model:** Your API key is used directly from the browser
 
 ## Limitations
 
 - **Memory Usage:** Large documents consume browser RAM
 - **Model Download:** First visit requires ~50MB model download (then cached)
 - **Context Window:** Limited to top 3 chunks (1000 chars) to balance quality and API costs
-- **API Key Exposure:** Client-side API calls expose the key in network logs (use for personal projects only)
+- **API Key Exposure:** Client-side API calls expose the key in your own network logs (safe for personal use)
 
 ## Performance Documentation
 
