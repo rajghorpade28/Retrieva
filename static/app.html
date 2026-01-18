@@ -839,6 +839,24 @@
                 </div>
             </div>
         </div>
+        </div>
+
+        <!-- Custom Dialog Modal -->
+        <div id="customDialog"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div
+                style="background: var(--bg-sidebar); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.2s ease; display: flex; flex-direction: column; gap: 1rem;">
+                <h3 id="dialogTitle" style="margin: 0; color: var(--text-primary); font-size: 1.2rem;">Confirm</h3>
+                <p id="dialogMessage" style="color: var(--text-secondary); font-size: 1rem; line-height: 1.5;"></p>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1rem;">
+                    <button id="dialogCancel"
+                        style="padding: 0.6rem 1.2rem; border-radius: 12px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button id="dialogConfirm"
+                        style="padding: 0.6rem 1.2rem; border-radius: 12px; background: var(--accent-primary); color: white; border: none; cursor: pointer; font-weight: 600;">Confirm</button>
+                </div>
+            </div>
+        </div>
+
         <div class="content-area">
             <!-- Upload Interface -->
             <div class="upload-container" id="uploadContainer">
@@ -1398,6 +1416,48 @@
             }
         }
 
+        // --- Dialog System Logic (Moved inside Module) ---
+        const customDialog = document.getElementById('customDialog');
+        const dialogTitle = document.getElementById('dialogTitle');
+        const dialogMessage = document.getElementById('dialogMessage');
+        const dialogCancel = document.getElementById('dialogCancel');
+        const dialogConfirm = document.getElementById('dialogConfirm');
+
+        let dialogResolve = null;
+
+        function showDialog(title, message, isConfirm = false) {
+            return new Promise((resolve) => {
+                dialogTitle.textContent = title;
+                dialogMessage.textContent = message;
+                dialogResolve = resolve;
+
+                if (isConfirm) {
+                    dialogCancel.style.display = 'block';
+                    dialogTitle.textContent = title || 'Confirm';
+                    dialogConfirm.textContent = 'Confirm';
+                    dialogConfirm.style.background = 'var(--accent-primary)';
+                } else {
+                    dialogCancel.style.display = 'none';
+                    dialogTitle.textContent = title || 'Alert';
+                    dialogConfirm.textContent = 'OK';
+                    dialogConfirm.style.background = 'var(--accent-secondary)';
+                }
+
+                customDialog.style.display = 'flex';
+            });
+        }
+
+        function closeDialog(result) {
+            customDialog.style.display = 'none';
+            if (dialogResolve) {
+                dialogResolve(result);
+                dialogResolve = null;
+            }
+        }
+
+        if (dialogCancel) dialogCancel.onclick = () => closeDialog(false);
+        if (dialogConfirm) dialogConfirm.onclick = () => closeDialog(true);
+
         // Expose to window
         window.sendMessage = sendMessage;
 
@@ -1588,67 +1648,6 @@
         }
 
 
-    </script>
-    </script>
-
-    <!-- Custom Dialog Modal -->
-    <div id="customDialog"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div
-            style="background: var(--bg-sidebar); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.2s ease; display: flex; flex-direction: column; gap: 1rem;">
-            <h3 id="dialogTitle" style="margin: 0; color: var(--text-primary); font-size: 1.2rem;">Confirm</h3>
-            <p id="dialogMessage" style="color: var(--text-secondary); font-size: 1rem; line-height: 1.5;"></p>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1rem;">
-                <button id="dialogCancel"
-                    style="padding: 0.6rem 1.2rem; border-radius: 12px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; font-weight: 600;">Cancel</button>
-                <button id="dialogConfirm"
-                    style="padding: 0.6rem 1.2rem; border-radius: 12px; background: var(--accent-primary); color: white; border: none; cursor: pointer; font-weight: 600;">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Dialog System
-        const customDialog = document.getElementById('customDialog');
-        const dialogTitle = document.getElementById('dialogTitle');
-        const dialogMessage = document.getElementById('dialogMessage');
-        const dialogCancel = document.getElementById('dialogCancel');
-        const dialogConfirm = document.getElementById('dialogConfirm');
-
-        let dialogResolve = null;
-
-        function showDialog(title, message, isConfirm = false) {
-            return new Promise((resolve) => {
-                dialogTitle.textContent = title;
-                dialogMessage.textContent = message;
-                dialogResolve = resolve;
-
-                if (isConfirm) {
-                    dialogCancel.style.display = 'block';
-                    dialogTitle.textContent = title || 'Confirm';
-                    dialogConfirm.textContent = 'Confirm';
-                    dialogConfirm.style.background = 'var(--accent-primary)';
-                } else {
-                    dialogCancel.style.display = 'none';
-                    dialogTitle.textContent = title || 'Alert';
-                    dialogConfirm.textContent = 'OK';
-                    dialogConfirm.style.background = 'var(--accent-secondary)';
-                }
-
-                customDialog.style.display = 'flex';
-            });
-        }
-
-        function closeDialog(result) {
-            customDialog.style.display = 'none';
-            if (dialogResolve) {
-                dialogResolve(result);
-                dialogResolve = null;
-            }
-        }
-
-        dialogCancel.onclick = () => closeDialog(false);
-        dialogConfirm.onclick = () => closeDialog(true);
     </script>
 </body>
 
