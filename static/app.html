@@ -1369,15 +1369,23 @@
                 item.appendChild(nameSpan);
                 item.appendChild(delBtn);
 
+                ```
                 item.addEventListener('click', () => loadSession(session.id));
                 historySection.appendChild(item);
             });
         }
 
-        function deleteSession(sessionId) {
+        async function deleteSession(sessionId) {
             if (sessions[sessionId]) {
                 delete sessions[sessionId];
                 saveSessions();
+                
+                // Notify worker to clean up DB
+                try {
+                    await workerClient.post('delete', { sessionId: sessionId });
+                } catch(e) {
+                    console.error("Failed to delete from DB", e);
+                }
 
                 // If we deleted the active session, reset to home
                 if (currentSessionId === sessionId) {
@@ -1405,27 +1413,27 @@
 
             // Render History
             // Add Welcome Message Reconstucted
-            addBubble(`<strong>${session.filename} loaded!</strong><br>Continued conversation.`, 'ai', false);
+            addBubble(`< strong > ${ session.filename } loaded!</strong > <br>Continued conversation.`, 'ai', false);
 
             session.messages.forEach(msg => {
-                addBubble(msg.text, msg.type, false);
+                        addBubble(msg.text, msg.type, false);
             });
 
-            // Update Sidebar Highlight
-            renderSessionList();
+                    // Update Sidebar Highlight
+                    renderSessionList();
         }
 
-        // Register Service Worker for caching models
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
+                    // Register Service Worker for caching models
+                    if ('serviceWorker' in navigator) {
+                        window.addEventListener('load', () => {
+                            navigator.serviceWorker.register('./sw.js')
+                                .then(registration => {
+                                    console.log('Service Worker registered successfully:', registration.scope);
+                                })
+                                .catch(error => {
+                                    console.log('Service Worker registration failed:', error);
+                                });
+                        });
         }
 
 

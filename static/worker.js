@@ -16,8 +16,72 @@ class RAGWorker {
         this.overlap = 50;
         this.batchSize = 10;
 
+
+        // Initialize DB on creation
+        this.db = null;
+        this.initDB();
+
         // Pre-warm the model on worker initialization
         this.initializeModel();
+    }
+
+    // --- IndexedDB Helper Methods ---
+    initDB() {
+        const request = indexedDB.open("RetrievaDB", 1);
+
+        request.onupgradeneeded = (event) => {
+            this.db = event.target.result;
+            if (!this.db.objectStoreNames.contains("vectors")) {
+                this.db.createObjectStore("vectors", { keyPath: "sessionId" });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            this.db = event.target.result;
+            // console.log("IndexedDB Initialized");
+        };
+
+        request.onerror = (event) => {
+            console.error("IndexedDB Error:", event.target.error);
+        };
+    }
+
+    async saveToDB(sessionId, chunks) {
+        if (!this.db) return;
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["vectors"], "readwrite");
+            const store = transaction.objectStore("vectors");
+            const request = store.put({ sessionId: sessionId, chunks: chunks });
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async loadFromDB(sessionId) {
+        if (!this.db) return null;
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["vectors"], "readonly");
+            const store = transaction.objectStore("vectors");
+            const request = store.get(sessionId);
+
+            request.onsuccess = () => {
+                resolve(request.result ? request.result.chunks : null);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async deleteFromDB(sessionId) {
+        if (!this.db) return;
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["vectors"], "readwrite");
+            const store = transaction.objectStore("vectors");
+            const request = store.delete(sessionId);
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
     }
 
     async initializeModel() {
@@ -84,6 +148,9 @@ class RAGWorker {
             });
         }
 
+        // --- NEW: Save to IndexedDB ---
+        await this.saveToDB(sessionId, this.vectorStores[sessionId]);
+
         return {
             filename: fileData.filename,
             status: "Success",
@@ -96,13 +163,25 @@ class RAGWorker {
         const { question, apiKey, sessionId } = data;
 
         // Retrieve the correct store
-        const store = this.vectorStores[sessionId];
+        let store = this.vectorStores[sessionId];
 
-        if (!store || store.length === 0) {
-            return { answer: "Session context missing or empty.", context: [] };
+        // --- NEW: Restore from IndexedDB if not in RAM ---
+        if (!store) {
+            // console.log("Session not in RAM, checking DB...", sessionId);
+            const fromDB = await this.loadFromDB(sessionId);
+            if (fromDB) {
+                // Restore to RAM
+                this.vectorStores[sessionId] = fromDB;
+                store = fromDB;
+                // console.log("Restored session from DB");
+            }
         }
 
-        self.postMessage({ type: 'progress', message: 'Embedding query...' });
+        if (!store || store.length === 0) {
+            return { answer: "Session context missing. Please re-upload document.", context: [] };
+        }
+
+        // self.postMessage({ type: 'progress', message: 'Embedding query...' });
         await this.lazyLoadEmbedder();
         const queryOutput = await this.embedder(question, { pooling: 'mean', normalize: true });
         const queryEmbedding = queryOutput.data;
@@ -154,6 +233,14 @@ Answer:`;
             context: results,
             sessionId: sessionId
         };
+    }
+
+    async handleDelete(sessionId) {
+        if (this.vectorStores[sessionId]) {
+            delete this.vectorStores[sessionId];
+        }
+        await this.deleteFromDB(sessionId);
+        return { status: "deleted", sessionId };
     }
 
     async callGemini(prompt, apiKey) {
@@ -219,6 +306,9 @@ self.addEventListener('message', async (e) => {
             result = await ragWorker.handleIngest(data);
         } else if (type === 'query') {
             result = await ragWorker.handleQuery(data);
+        } else if (type === 'delete') {
+            // New delete handler
+            result = await ragWorker.handleDelete(data.sessionId);
         }
 
         self.postMessage({ type: 'result', msgId, data: result });
