@@ -976,7 +976,18 @@
 
         // State Management
         let currentSessionId = null;
-        let sessions = JSON.parse(localStorage.getItem('retrieva_sessions') || '{}');
+        // Changed: Do not load from localStorage. Start fresh on every refresh.
+        let sessions = {};
+
+        // ... (lines 981 - 1269 irrelevant to change) ...
+
+        // --- Session Management ---
+
+        function saveSessions() {
+            // Disabled persistence to localStorage as requested.
+            // Data remains only in memory (variable 'sessions').
+            // localStorage.setItem('retrieva_sessions', JSON.stringify(sessions));
+        }
 
         const fileInput = document.getElementById('fileInput');
         const uploadContainer = document.getElementById('uploadContainer');
@@ -1261,9 +1272,8 @@
 
         // --- Session Management ---
 
-        function saveSessions() {
-            localStorage.setItem('retrieva_sessions', JSON.stringify(sessions));
-        }
+        // saveSessions defined above
+
 
         function renderSessionList() {
             historySection.innerHTML = '<div class="history-label">Previous Chats</div>';
