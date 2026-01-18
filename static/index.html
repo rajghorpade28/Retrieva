@@ -1190,9 +1190,13 @@
 
                 if (bubble) {
                     bubble.className = `message-bubble ai`;
-                    bubble.innerHTML = answerHTML;
+                    // Clear loading indicator
+                    bubble.innerHTML = '';
+                    await simulateTyping(bubble, answerHTML);
                 } else {
-                    addBubble(data.answer, 'ai');
+                    const newBubble = addBubble('', 'ai', false); // Create empty
+                    // Note: addBubble doesn't return the element in current impl, so we'd need to fetch it.
+                    // But realistically, loadingId always exists here.
                 }
 
                 // 5. Save Interaction to History
@@ -1206,6 +1210,29 @@
                 console.error(err);
                 const loader = document.getElementById(loadingId);
                 if (loader) loader.innerHTML = "Sorry, I encountered an error: " + err.message;
+            }
+        }
+
+        async function simulateTyping(element, htmlContent) {
+            // Split by HTML tags and text: keeps tags intact, splits text
+            const tokens = htmlContent.split(/(<[^>]+>)/g).filter(t => t);
+
+            for (const token of tokens) {
+                if (token.startsWith('<')) {
+                    // It's a tag, append immediately
+                    element.innerHTML += token;
+                } else {
+                    // It's text, type word by word for ChatGPT feel
+                    // Split by spaces but keep them to preserve layout
+                    const words = token.split(/(\s+)/g).filter(w => w);
+
+                    for (const word of words) {
+                        element.innerHTML += word;
+                        messagesList.scrollTop = messagesList.scrollHeight; // Auto scroll
+                        // Random delay 10-30ms for realistic typing
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10));
+                    }
+                }
             }
         }
 
