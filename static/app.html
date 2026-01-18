@@ -796,25 +796,46 @@
         <div id="apiModal"
             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
             <div
-                style="background: var(--bg-sidebar); padding: 2rem; border-radius: 20px; width: 90%; max-width: 500px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease;">
+                style="background: var(--bg-sidebar); padding: 2rem; border-radius: 20px; width: 90%; max-width: 550px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease;">
                 <h2
                     style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                    <span>🔑</span>Enter Gemini API Key
+                    <span>🔑</span>Manage API Keys
                 </h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">To use
-                    this RAG system,
-                    please provide your Google Gemini API Key. <br><br><span
-                        style="display: block; font-size: 0.9em; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2); color: var(--text-primary);">🔒
-                        The key is used only in your browser and is not stored on our servers. </span></p>
-                <div class="input-wrapper" style="margin: 0 0 1.5rem 0; padding: 0.8rem 1rem;"><input type="password"
-                        id="apiKeyInput" placeholder="Paste your API key here (AIza...)" style="width: 100%;"></div>
-                <div style="display: flex; justify-content: flex-end; gap: 1rem;"><button id="closeModalBtn"
-                        style="padding: 0.8rem 1.5rem; border-radius: 12px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; font-weight: 600;">Cancel</button><button
-                        id="saveKeyBtn"
-                        style="padding: 0.8rem 1.5rem; border-radius: 12px; background: var(--accent-primary); color: white; border: none; cursor: pointer; font-weight: 600;">Save
-                        Key</button></div>
-                <div id="keyStatus"
-                    style="margin-top: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.9em;">
+
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Select an active key or add a new one. Keys are stored locally in your browser.
+                </p>
+
+                <!-- List of Saved Keys -->
+                <div id="keyList"
+                    style="max-height: 200px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-body);">
+                    <!-- Dynamic Items -->
+                </div>
+
+                <!-- Add New Key Form -->
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">Add New Key</h3>
+
+                    <div class="input-wrapper" style="margin: 0 0 0.8rem 0; padding: 0.8rem 1rem;">
+                        <input type="text" id="newKeyLabel" placeholder="Label (e.g., Personal Key)"
+                            style="width: 100%;">
+                    </div>
+
+                    <div class="input-wrapper" style="margin: 0 0 1rem 0; padding: 0.8rem 1rem;">
+                        <input type="password" id="newKeyInput" placeholder="Paste your API Key (AIza...)"
+                            style="width: 100%;">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div id="keyStatus" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
+                        <div style="display: flex; gap: 0.8rem;">
+                            <button id="closeModalBtn"
+                                style="padding: 0.8rem 1.5rem; border-radius: 12px; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; font-weight: 600;">Close</button>
+                            <button id="saveKeyBtn"
+                                style="padding: 0.8rem 1.5rem; border-radius: 12px; background: var(--accent-primary); color: white; border: none; cursor: pointer; font-weight: 600;">Add
+                                & Select</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1129,22 +1150,129 @@
 
         // API Key Logic
         const apiModal = document.getElementById('apiModal');
-        const apiKeyInput = document.getElementById('apiKeyInput');
+        const newKeyInput = document.getElementById('newKeyInput');
+        const newKeyLabel = document.getElementById('newKeyLabel');
         const saveKeyBtn = document.getElementById('saveKeyBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const apiKeyBtn = document.getElementById('apiKeyBtn');
         const keyStatus = document.getElementById('keyStatus');
+        const keyList = document.getElementById('keyList');
+
+        // State: Array of { key, label, active }
+        let apiKeys = JSON.parse(localStorage.getItem('retrieva_keys') || '[]');
+
+        // Migration support for old single key
+        const oldKey = localStorage.getItem('GEMINI_API_KEY');
+        if (oldKey && apiKeys.length === 0) {
+            apiKeys.push({ key: oldKey, label: 'Legacy Key', active: true });
+            localStorage.removeItem('GEMINI_API_KEY');
+            saveKeys();
+        }
+
+        function saveKeys() {
+            localStorage.setItem('retrieva_keys', JSON.stringify(apiKeys));
+            renderKeys();
+        }
 
         function getApiKey() {
-            return localStorage.getItem('GEMINI_API_KEY');
+            const active = apiKeys.find(k => k.active);
+            return active ? active.key : null;
+        }
+
+        function renderKeys() {
+            keyList.innerHTML = '';
+            if (apiKeys.length === 0) {
+                keyList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-style: italic;">No keys saved. Add one below.</div>';
+                return;
+            }
+
+            apiKeys.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; overflow: hidden;';
+                if (index === apiKeys.length - 1) div.style.borderBottom = 'none';
+
+                // Radio + Label
+                const left = document.createElement('div');
+                left.style.cssText = 'display: flex; align-items: center; gap: 10px; overflow: hidden; padding-right: 10px; flex: 1;';
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'activeKey';
+                radio.checked = item.active;
+                radio.onchange = () => selectKey(index);
+                radio.style.cursor = 'pointer';
+
+                const info = document.createElement('div');
+                info.style.overflow = 'hidden';
+                // Label
+                const lbl = document.createElement('div');
+                lbl.textContent = item.label || `Key #${index + 1}`;
+                lbl.style.fontWeight = item.active ? '600' : '400';
+                lbl.style.color = item.active ? 'var(--accent-primary)' : 'var(--text-primary)';
+                lbl.style.whiteSpace = 'nowrap';
+                lbl.style.overflow = 'hidden';
+                lbl.style.textOverflow = 'ellipsis';
+
+                // Masked Key
+                const mask = document.createElement('div');
+                mask.textContent = item.key.substring(0, 6) + '...' + item.key.substring(item.key.length - 4);
+                mask.style.fontSize = '0.75rem';
+                mask.style.color = 'var(--text-secondary)';
+
+                info.appendChild(lbl);
+                info.appendChild(mask);
+                left.appendChild(radio);
+                left.appendChild(info);
+
+                // Delete Button
+                const del = document.createElement('button');
+                del.innerHTML = '🗑️';
+                del.title = "Delete Key";
+                del.style.cssText = 'background: none; border: none; cursor: pointer; opacity: 0.6; padding: 5px;';
+                del.onmouseover = () => del.style.opacity = '1';
+                del.onmouseout = () => del.style.opacity = '0.6';
+                del.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this API Key?')) deleteKey(index);
+                };
+
+                div.appendChild(left);
+                div.appendChild(del);
+
+                // Click row to select
+                div.onclick = (e) => {
+                    if (e.target !== del && e.target !== radio) selectKey(index);
+                }
+                div.style.cursor = 'pointer';
+                div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.03)';
+                div.onmouseout = () => div.style.background = 'transparent';
+
+                keyList.appendChild(div);
+            });
+        }
+
+        function selectKey(index) {
+            apiKeys.forEach((k, i) => k.active = (i === index));
+            saveKeys();
+        }
+
+        function deleteKey(index) {
+            apiKeys.splice(index, 1);
+            // If we deleted the active one, select the first available
+            if (apiKeys.length > 0 && !apiKeys.some(k => k.active)) {
+                apiKeys[0].active = true;
+            }
+            saveKeys();
         }
 
         function toggleModal(show) {
             apiModal.style.display = show ? 'flex' : 'none';
             if (show) {
-                apiKeyInput.value = getApiKey() || '';
-                apiKeyInput.focus();
+                renderKeys();
+                newKeyInput.value = '';
+                newKeyLabel.value = '';
                 keyStatus.textContent = '';
+                newKeyInput.focus();
             }
         }
 
@@ -1152,16 +1280,32 @@
         closeModalBtn.addEventListener('click', () => toggleModal(false));
 
         saveKeyBtn.addEventListener('click', () => {
-            const key = apiKeyInput.value.trim();
+            const key = newKeyInput.value.trim();
+            const label = newKeyLabel.value.trim();
+
             if (key.length < 30 || !key.startsWith('AIza')) {
-                keyStatus.textContent = "Invalid Key format. Should start with 'AIza'.";
+                keyStatus.textContent = "Invalid Format. Must start with 'AIza'.";
                 keyStatus.style.color = "red";
                 return;
             }
-            localStorage.setItem('GEMINI_API_KEY', key);
-            keyStatus.textContent = "Key Saved!";
+
+            // Unselect others
+            apiKeys.forEach(k => k.active = false);
+
+            // Add new active key
+            apiKeys.push({
+                key: key,
+                label: label || `Key #${apiKeys.length + 1}`,
+                active: true
+            });
+
+            saveKeys();
+
+            keyStatus.textContent = "Key Added!";
             keyStatus.style.color = "green";
-            setTimeout(() => toggleModal(false), 800);
+            newKeyInput.value = '';
+            newKeyLabel.value = '';
+            // Don't close immediately so they can see it added
         });
 
         // Chat Handling
