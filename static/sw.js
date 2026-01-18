@@ -4,7 +4,7 @@ const MODEL_CACHE = 'retrieva-models-v1';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
-    '/static/index.html',
+    '/static/app.html',
     '/static/worker.js',
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
     'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
