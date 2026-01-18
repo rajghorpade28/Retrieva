@@ -1161,16 +1161,7 @@
 
             // 2. Add Loading Indicator
             const loadingId = addLoading();
-            const loaderEl = document.getElementById(loadingId);
-            const statusSpan = loaderEl.querySelector('.loading-status') || document.createElement('span');
-
-            if (!loaderEl.querySelector('.loading-status')) {
-                statusSpan.className = 'loading-status';
-                statusSpan.style.marginLeft = '10px';
-                statusSpan.style.fontSize = '0.8rem';
-                statusSpan.style.opacity = '0.7';
-                loaderEl.appendChild(statusSpan);
-            }
+            // We no longer append text status, keeping just the animation
 
             try {
                 // 3. Query Worker (Pass API Key & SessionID)
@@ -1178,8 +1169,8 @@
                     question: text,
                     apiKey: apiKey,
                     sessionId: currentSessionId
-                }, (progressMsg) => {
-                    statusSpan.textContent = progressMsg;
+                }, () => {
+                    // Ignore progress messages to keep animation clean
                 });
 
                 // 4. Replace Loading with Response
