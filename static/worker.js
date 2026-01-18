@@ -9,11 +9,12 @@ env.useBrowserCache = true;
 class RAGWorker {
     constructor() {
         this.embedder = null;
-        this.vectorStore = [];
+        // Map session_id -> array of chunks
+        this.vectorStores = {};
         // Optimized: Larger chunks = fewer total chunks = faster processing
-        this.chunkSize = 500;  // Increased from 150
-        this.overlap = 50;     // Proportional overlap
-        this.batchSize = 10;   // Process chunks in batches
+        this.chunkSize = 500;
+        this.overlap = 50;
+        this.batchSize = 10;
 
         // Pre-warm the model on worker initialization
         this.initializeModel();
@@ -50,7 +51,9 @@ class RAGWorker {
         self.postMessage({ type: 'progress', message: 'Chunking text...' });
         const chunks = this.chunkText(fileData.text);
 
-        this.vectorStore = [];
+        // Create new session ID
+        const sessionId = "client-session-" + Date.now();
+        this.vectorStores[sessionId] = [];
 
         const total = chunks.length;
 
@@ -64,9 +67,9 @@ class RAGWorker {
                 batch.map(chunk => this.embedder(chunk, { pooling: 'mean', normalize: true }))
             );
 
-            // Store results
+            // Store results in the specific session store
             for (let j = 0; j < batch.length; j++) {
-                this.vectorStore.push({
+                this.vectorStores[sessionId].push({
                     text: batch[j],
                     embedding: embeddings[j].data,
                     source: fileData.filename
@@ -84,16 +87,19 @@ class RAGWorker {
         return {
             filename: fileData.filename,
             status: "Success",
-            session_id: "client-session-" + Date.now(),
+            session_id: sessionId,
             chunks_added: chunks.length
         };
     }
 
     async handleQuery(data) {
-        const { question, apiKey } = data;
+        const { question, apiKey, sessionId } = data;
 
-        if (this.vectorStore.length === 0) {
-            return { answer: "Please upload a document first.", context: [] };
+        // Retrieve the correct store
+        const store = this.vectorStores[sessionId];
+
+        if (!store || store.length === 0) {
+            return { answer: "Session context missing or empty.", context: [] };
         }
 
         self.postMessage({ type: 'progress', message: 'Embedding query...' });
@@ -102,7 +108,7 @@ class RAGWorker {
         const queryEmbedding = queryOutput.data;
 
         // Cosine Sim
-        const scored = this.vectorStore.map(doc => ({
+        const scored = store.map(doc => ({
             ...doc,
             score: this.cosineSimilarity(queryEmbedding, doc.embedding)
         }));
@@ -145,7 +151,8 @@ Answer:`;
         return {
             question: question,
             answer: answer.trim(),
-            context: results
+            context: results,
+            sessionId: sessionId
         };
     }
 

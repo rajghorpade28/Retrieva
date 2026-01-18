@@ -935,10 +935,14 @@
             }
         }
 
+
         // --- Main UI Logic ---
         const workerClient = new RAGWorkerClient();
         const fileProcessor = new FileProcessor();
+
+        // State Management
         let currentSessionId = null;
+        let sessions = JSON.parse(localStorage.getItem('retrieva_sessions') || '{}');
 
         const fileInput = document.getElementById('fileInput');
         const uploadContainer = document.getElementById('uploadContainer');
@@ -954,13 +958,10 @@
         // Initialize Theme
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-
             if (savedTheme === 'light') {
                 document.body.setAttribute('data-theme', 'light');
                 themeCheckbox.checked = true;
-            }
-
-            else {
+            } else {
                 document.body.removeAttribute('data-theme');
                 themeCheckbox.checked = false;
             }
@@ -970,15 +971,16 @@
             if (e.target.checked) {
                 document.body.setAttribute('data-theme', 'light');
                 localStorage.setItem('theme', 'light');
-            }
-
-            else {
+            } else {
                 document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'dark');
             }
         });
 
         initTheme();
+
+        // Render Initial History
+        renderSessionList();
 
         // Click to Upload
         dropZone.addEventListener('click', () => {
@@ -1017,17 +1019,24 @@
                 const data = await workerClient.post('ingest', {
                     text: text,
                     filename: file.name
-                }
-
-                    , (progressMsg) => {
-                        statusMsg.textContent = progressMsg;
-                    });
+                }, (progressMsg) => {
+                    statusMsg.textContent = progressMsg;
+                });
 
                 // Set current session
                 currentSessionId = data.session_id;
 
-                // Update UI (Simulate session list)
-                updateSessionList(data.filename);
+                // Create new Session in State
+                sessions[currentSessionId] = {
+                    id: currentSessionId,
+                    filename: file.name,
+                    timestamp: Date.now(),
+                    messages: [] // Store chat history here
+                };
+                saveSessions();
+
+                // Update UI
+                renderSessionList();
 
                 // Success Transition
                 statusMsg.textContent = "Success! Ready.";
@@ -1039,22 +1048,17 @@
                     setTimeout(() => {
                         uploadContainer.style.display = 'none';
                         chatInterface.style.display = 'flex';
+                        messagesList.innerHTML = ''; // Clear for new chat
 
-                        if (messagesList.children.length === 0) {
-                            addSystemWelcome();
-                        }
+                        // Add Welcome Message
+                        const welcomeMsg = { text: `<strong>Document Processed!</strong><br>I'm ready. Ask me anything about your file.`, type: 'ai' };
+                        addBubble(welcomeMsg.text, welcomeMsg.type, false); // Don't save system msg to history
 
                         userInput.focus();
-                    }
+                    }, 300);
+                }, 800);
 
-                        , 300);
-                }
-
-                    , 800);
-
-            }
-
-            catch (err) {
+            } catch (err) {
                 console.error(err);
                 statusMsg.textContent = "Error: " + err.message;
                 statusMsg.style.color = "red";
@@ -1075,7 +1079,6 @@
 
         function toggleModal(show) {
             apiModal.style.display = show ? 'flex' : 'none';
-
             if (show) {
                 apiKeyInput.value = getApiKey() || '';
                 apiKeyInput.focus();
@@ -1088,13 +1091,11 @@
 
         saveKeyBtn.addEventListener('click', () => {
             const key = apiKeyInput.value.trim();
-
             if (key.length < 30 || !key.startsWith('AIza')) {
                 keyStatus.textContent = "Invalid Key format. Should start with 'AIza'.";
                 keyStatus.style.color = "red";
                 return;
             }
-
             localStorage.setItem('GEMINI_API_KEY', key);
             keyStatus.textContent = "Key Saved!";
             keyStatus.style.color = "green";
@@ -1108,7 +1109,6 @@
 
             // Check API Key
             const apiKey = getApiKey();
-
             if (!apiKey) {
                 toggleModal(true);
                 keyStatus.textContent = "Please save your API Key first.";
@@ -1139,56 +1139,58 @@
             }
 
             try {
-
-                // 3. Query Worker (Pass API Key)
+                // 3. Query Worker (Pass API Key & SessionID)
                 const data = await workerClient.post('query', {
                     question: text,
-                    apiKey: apiKey
-                }
-
-                    , (progressMsg) => {
-                        statusSpan.textContent = progressMsg;
-                    });
+                    apiKey: apiKey,
+                    sessionId: currentSessionId
+                }, (progressMsg) => {
+                    statusSpan.textContent = progressMsg;
+                });
 
                 // 4. Replace Loading with Response
                 const bubble = document.getElementById(loadingId);
+                const answerHTML = data.answer.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
 
                 if (bubble) {
-                    // Keep the same bubble or replace it
-                    // Replacing strictly to match old behavior but cleaner
                     bubble.className = `message-bubble ai`;
-                    bubble.innerHTML = data.answer.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-                }
-
-                else {
+                    bubble.innerHTML = answerHTML;
+                } else {
                     addBubble(data.answer, 'ai');
                 }
 
-            }
+                // 5. Save Interaction to History
+                if (sessions[currentSessionId]) {
+                    sessions[currentSessionId].messages.push({ text: text, type: 'user' });
+                    sessions[currentSessionId].messages.push({ text: data.answer, type: 'ai' });
+                    saveSessions();
+                }
 
-            catch (err) {
+            } catch (err) {
                 console.error(err);
                 const loader = document.getElementById(loadingId);
                 if (loader) loader.innerHTML = "Sorry, I encountered an error: " + err.message;
             }
         }
 
-        // Expose to window if needed by HTML attributes, though we use addEventListener now
+        // Expose to window
         window.sendMessage = sendMessage;
 
         // Event Listeners
         sendBtn.addEventListener('click', sendMessage);
-
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
 
-        function addBubble(text, type) {
+        function addBubble(text, type, saveToHistory = true) {
             const div = document.createElement('div');
             div.className = `message-bubble ${type}`;
             div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
             messagesList.appendChild(div);
             messagesList.scrollTop = messagesList.scrollHeight;
+
+            // Note: We handle saving in sendMessage now to pair Q&A correctly, 
+            // but for restoring history we use this function too.
         }
 
         function addLoading() {
@@ -1203,7 +1205,8 @@
         }
 
         function addSystemWelcome() {
-            messagesList.innerHTML = `<div class="message-bubble ai"><strong>Document Processed!</strong><br>I'm ready. Ask me anything about your file.<br><small style="opacity:0.7">(Note: Initial model download may take a moment)</small></div>`;
+            // Deprecated in favor of inline logic in upload handler, but kept if called elsewhere
+            // No-op for now to avoid double welcome
         }
 
         window.resetChat = function () {
@@ -1217,22 +1220,71 @@
             uploadContainer.style.display = 'block';
             setTimeout(() => uploadContainer.style.opacity = '1', 10);
             chatInterface.style.display = 'none';
-            messagesList.innerHTML = ''; // Clear chat
-            fileInput.value = ''; // Clear input
+            messagesList.innerHTML = '';
+            fileInput.value = '';
             statusMsg.textContent = '';
+
+            // De-select items
+            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
         }
 
-        function updateSessionList(filename) {
-            historySection.innerHTML = '<div class="history-label">Current Session</div>';
+        // --- Session Management ---
 
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.style.backgroundColor = 'rgba(125,125,125,0.2)';
-            item.innerHTML = `<span class="history-icon" style="margin-right:8px">📄</span>${filename}`;
-
-            historySection.appendChild(item);
+        function saveSessions() {
+            localStorage.setItem('retrieva_sessions', JSON.stringify(sessions));
         }
 
+        function renderSessionList() {
+            historySection.innerHTML = '<div class="history-label">Previous Chats</div>';
+
+            // Sort by newst first
+            const sortedSessions = Object.values(sessions).sort((a, b) => b.timestamp - a.timestamp);
+
+            if (sortedSessions.length === 0) {
+                historySection.innerHTML += '<div style="padding:0 1rem; color:var(--text-secondary); font-size:0.85rem; font-style:italic;">No history yet.</div>';
+                return;
+            }
+
+            sortedSessions.forEach(session => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                if (currentSessionId === session.id) {
+                    item.style.backgroundColor = 'rgba(125,125,125,0.2)';
+                    item.classList.add('active'); // For styling hooks if needed
+                }
+                item.innerHTML = `<span class="history-icon" style="margin-right:8px">📄</span>${session.filename}`;
+
+                item.addEventListener('click', () => loadSession(session.id));
+                historySection.appendChild(item);
+            });
+        }
+
+        function loadSession(sessionId) {
+            const session = sessions[sessionId];
+            if (!session) return;
+
+            currentSessionId = sessionId;
+
+            // Close mobile sidebar
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            if (sidebarToggle) sidebarToggle.checked = false;
+
+            // Switch UI View
+            uploadContainer.style.display = 'none';
+            chatInterface.style.display = 'flex';
+            messagesList.innerHTML = '';
+
+            // Render History
+            // Add Welcome Message Reconstucted
+            addBubble(`<strong>${session.filename} loaded!</strong><br>Continued conversation.`, 'ai', false);
+
+            session.messages.forEach(msg => {
+                addBubble(msg.text, msg.type, false);
+            });
+
+            // Update Sidebar Highlight
+            renderSessionList();
+        }
 
         // Register Service Worker for caching models
         if ('serviceWorker' in navigator) {
@@ -1246,6 +1298,7 @@
                     });
             });
         }
+
 
     </script>
 </body>
