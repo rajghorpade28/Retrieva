@@ -1589,21 +1589,21 @@
 
         async function deleteSession(sessionId) {
             if (sessions[sessionId]) {
+                // 1. Update State & UI Immediately (Optimistic)
                 delete sessions[sessionId];
                 saveSessions();
 
-                // Notify worker to clean up DB
+                if (currentSessionId === sessionId) {
+                    resetChat();
+                } else {
+                    renderSessionList();
+                }
+
+                // 2. Perform Background Cleanup
                 try {
                     await workerClient.post('delete', { sessionId: sessionId });
                 } catch (e) {
                     console.error("Failed to delete from DB", e);
-                }
-
-                // If we deleted the active session, reset to home
-                if (currentSessionId === sessionId) {
-                    resetChat();
-                } else {
-                    renderSessionList(); // Just update list
                 }
             }
         }
