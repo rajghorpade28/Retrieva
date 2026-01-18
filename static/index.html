@@ -32,6 +32,17 @@
 
             --toggle-bg: #334155;
             --toggle-circle: #f8fafc;
+
+            /* Component Colors (Dark Default) */
+            --bg-glass: rgba(30, 41, 59, 0.7);
+            --bg-input: rgba(15, 23, 42, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-heading: #ffffff;
+            --text-input: #ffffff;
+            --nav-cta-bg: rgba(255, 255, 255, 0.1);
+            --nav-cta-text: #ffffff;
+            --nav-cta-border: rgba(255, 255, 255, 0.2);
+            --gradient-heading: linear-gradient(to right, #ffffff, #a5b4fc);
         }
 
         /* Light Theme Overrides */
@@ -46,6 +57,19 @@
 
             --toggle-bg: #cbd5e1;
             --toggle-circle: #fff;
+
+            /* Component Colors (Light Mode) */
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --text-heading: #1e293b;
+            /* Dark Slate */
+            --text-input: #0f172a;
+            --nav-cta-bg: rgba(0, 0, 0, 0.06);
+            --nav-cta-text: #334155;
+            --nav-cta-border: rgba(0, 0, 0, 0.1);
+            --gradient-heading: linear-gradient(to right, #1e293b, #2563eb);
+            --accent-glow: rgba(37, 99, 235, 0.15);
         }
 
         * {
@@ -136,7 +160,7 @@
             padding: 0.5rem 1rem;
             border-radius: 50px;
             font-size: 0.85rem;
-            color: #60a5fa;
+            color: var(--primary);
             margin-bottom: 2rem;
             display: inline-block;
             backdrop-filter: blur(5px);
@@ -147,7 +171,7 @@
             line-height: 1.1;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            background: linear-gradient(to right, #ffffff, #a5b4fc);
+            background: var(--gradient-heading);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             max-width: 800px;
@@ -175,15 +199,14 @@
 
         .nav-cta {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--nav-cta-bg);
+            color: var(--nav-cta-text);
             padding: 0.6rem 1.2rem;
             border-radius: 12px;
             text-decoration: none;
             font-weight: 700;
-            /* Bold */
             font-size: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--nav-cta-border);
             transition: all 0.3s ease;
             margin-right: 1rem;
         }
@@ -220,9 +243,9 @@
         }
 
         .feature-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: var(--bg-glass);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-glass);
             padding: 2rem;
             border-radius: 20px;
             transition: transform 0.3s, box-shadow 0.3s;
@@ -237,7 +260,7 @@
         .feature-card h3 {
             font-size: 1.25rem;
             margin: 1rem 0;
-            color: white;
+            color: var(--text-heading);
         }
 
         .feature-card p {
@@ -270,10 +293,10 @@
         }
 
         .contact-form {
-            background: rgba(30, 41, 59, 0.8);
+            background: var(--bg-glass);
             /* Slightly darker/more opaque */
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--border-glass);
             padding: 3rem;
             border-radius: 24px;
             margin-top: 2rem;
@@ -406,10 +429,10 @@
             width: 100%;
             padding: 1.2rem;
             /* Comfortable padding */
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
             border-radius: 16px;
-            color: white;
+            color: var(--text-input);
             font-family: inherit;
             font-size: 1.1rem;
             /* Larger font */
@@ -531,7 +554,8 @@
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
             </svg>
         </a>
-        <p class="sub-cta"><span style="font-size: 1.3rem; font-weight: 700; color: #fff;">No signup required</span>
+        <p class="sub-cta"><span style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">No signup
+                required</span>
             <br> <span style="font-size: 0.95rem; opacity: 0.7;">Private & Secure</span>
         </p>
     </section>
