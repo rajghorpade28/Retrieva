@@ -154,7 +154,8 @@
             padding: 0.6rem 1.2rem;
             border-radius: 12px;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 700;
+            /* Bold */
             font-size: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
@@ -322,11 +323,25 @@
             }
 
             nav {
-                padding: 1.5rem;
+                padding: 1rem;
+                flex-direction: row;
+                /* Keep row for logo + button */
+                justify-content: space-between;
             }
 
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            /* Make sure nav links are visible */
             .nav-links {
-                display: none;
+                display: block;
+            }
+
+            .nav-cta {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+                margin-right: 0;
             }
         }
     </style>
