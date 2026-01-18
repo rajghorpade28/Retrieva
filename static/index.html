@@ -478,6 +478,164 @@
             }
         }
     </style>
+    <style>
+        /* Responsive Design Overrides */
+        @media screen and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+                padding: 1.2rem;
+            }
+
+            .content-area {
+                padding: 3rem 1.5rem;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: 100vh;
+                height: 100dvh;
+                /* Dynamic Viewport Height for mobile */
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                border-right: none;
+                border-bottom: 1px solid var(--border-subtle);
+                padding: 0.8rem 1rem;
+                gap: 0.8rem;
+                flex-shrink: 0;
+            }
+
+            .logo {
+                margin-bottom: 0;
+                margin-right: auto;
+                font-size: 1.3rem;
+            }
+
+            .new-chat-btn {
+                margin-bottom: 0;
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .history-section {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                margin-top: 0.5rem;
+                gap: 0.5rem;
+                -webkit-overflow-scrolling: touch;
+                /* Horizontal scroll for history */
+                display: flex;
+                /* Ensure it stays flex */
+            }
+
+            /* Hide scrollbar for cleaner look */
+            .history-section::-webkit-scrollbar {
+                height: 4px;
+            }
+
+            .history-section::-webkit-scrollbar-thumb {
+                background: var(--border-subtle);
+                border-radius: 4px;
+            }
+
+            .history-label {
+                display: none;
+                /* Hide label to save space, clearer without it in horizontal view */
+            }
+
+            .history-item {
+                flex: 0 0 auto;
+                margin: 0;
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            .main-content {
+                width: 100%;
+                flex: 1;
+                overflow: hidden;
+                /* Ensure chat scrolls, not body */
+            }
+
+            .top-bar {
+                padding: 0.8rem 1rem;
+                justify-content: space-between;
+                min-height: 60px;
+            }
+
+            /* Adjust Theme Toggle size for mobile */
+            .theme-toggle {
+                transform: scale(0.9);
+                margin: 0;
+            }
+
+            #apiKeyBtn {
+                margin-right: 0.5rem !important;
+                padding: 0.5rem !important;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .headline {
+                font-size: 1.8rem;
+                text-align: center;
+            }
+
+            .subheadline {
+                font-size: 1rem;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .dropzone {
+                padding: 2.5rem 1.5rem;
+            }
+
+            .upload-label {
+                font-size: 1rem;
+            }
+
+            .messages-list {
+                padding-right: 4px;
+                gap: 1rem;
+            }
+
+            .message-bubble {
+                max-width: 90%;
+                padding: 0.8rem 1rem;
+                font-size: 0.95rem;
+            }
+
+            .input-wrapper {
+                padding: 8px 8px 8px 14px;
+            }
+
+            .send-btn {
+                width: 38px;
+                height: 38px;
+            }
+
+            /* Modal Adjustments */
+            #apiModal>div {
+                padding: 1.5rem !important;
+                width: 95% !important;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
