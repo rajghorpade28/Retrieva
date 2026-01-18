@@ -732,6 +732,18 @@
             padding: 2.5rem 1.5rem;
         }
     </style>
+    <script>
+        // Prevent Flash of Light Mode
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            // If theme is 'light', apply it. Otherwise default to dark (remove attribute).
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -1001,23 +1013,24 @@
         const themeCheckbox = document.getElementById('themeCheckbox');
 
         // Initialize Theme
+        // Initialize Theme
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
-                document.body.setAttribute('data-theme', 'light');
+                document.documentElement.setAttribute('data-theme', 'light');
                 themeCheckbox.checked = true;
             } else {
-                document.body.removeAttribute('data-theme');
+                document.documentElement.removeAttribute('data-theme');
                 themeCheckbox.checked = false;
             }
         }
 
         themeCheckbox.addEventListener('change', (e) => {
             if (e.target.checked) {
-                document.body.setAttribute('data-theme', 'light');
+                document.documentElement.setAttribute('data-theme', 'light');
                 localStorage.setItem('theme', 'light');
             } else {
-                document.body.removeAttribute('data-theme');
+                document.documentElement.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'dark');
             }
         });
