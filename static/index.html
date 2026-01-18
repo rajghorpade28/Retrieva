@@ -567,11 +567,26 @@
             }
 
             /* Overlay effect for Main Content */
-            #sidebar-toggle:checked~.main-content {
-                opacity: 0.3;
+            .sidebar-overlay {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                /* Darken content */
+                z-index: 90;
+                /* Below sidebar (100) but above content */
+                opacity: 0;
                 pointer-events: none;
-                /* Disable interaction with chat when menu is open */
-                transition: opacity 0.3s;
+                transition: opacity 0.3s ease;
+            }
+
+            #sidebar-toggle:checked~.sidebar-overlay {
+                opacity: 1;
+                pointer-events: auto;
+                /* Enable clicking */
             }
 
             /* Sidebar Contents Reset from previous mobile tweaks */
@@ -703,6 +718,7 @@
 
 <body>
     <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle" style="display: none;">
+    <label for="sidebar-toggle" class="sidebar-overlay"></label>
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
