@@ -160,6 +160,8 @@
             width: 100%;
             padding: 2rem;
             z-index: 10;
+            margin: 0 auto;
+            /* Center the grid container */
         }
 
         .feature-card {
@@ -305,7 +307,9 @@
             Retrieva
         </div>
         <div class="nav-links">
-            <!-- GitHub link removed -->
+            <a href="#contact"
+                style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; margin-right: 1rem; transition: color 0.2s;">Get
+                in Touch</a>
         </div>
     </nav>
 
@@ -358,6 +362,35 @@
             <h3>Instant Answers</h3>
             <p>Powered by local embeddings and Gemini Flash for lightning-fast, accurate responses.</p>
         </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <h2>Get in Touch</h2>
+        <p style="color: var(--text-secondary);">Have questions or feedback? Drop me a message.</p>
+
+        <form action="https://formsubmit.co/rajghorpade231@gmail.com" method="POST" class="contact-form">
+            <input type="text" name="_honey" style="display:none">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="https://retrieva.vercel.app/">
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="4" required placeholder="Your message here..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" style="background: var(--primary); color: white;">Send
+                Message</button>
+        </form>
     </section>
 
     <footer>
