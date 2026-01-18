@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retrieva - Private AI Document Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // IIFE to Start Theme Early (Prevent Flash)
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <style>
         :root {
             /* Consistent Slate Palette (Matching app.html) */
@@ -20,6 +29,23 @@
             /* Alias */
             --accent-glow: rgba(59, 130, 246, 0.5);
             --gradient-1: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+
+            --toggle-bg: #334155;
+            --toggle-circle: #f8fafc;
+        }
+
+        /* Light Theme Overrides */
+        [data-theme="light"] {
+            --bg-dark: #f8fafc;
+            /* Slate 50 */
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            /* Slate 900 */
+            --text-secondary: #64748b;
+            /* Slate 500 */
+
+            --toggle-bg: #cbd5e1;
+            --toggle-circle: #fff;
         }
 
         * {
@@ -255,6 +281,117 @@
             box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
         }
 
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Enhanced Theme Toggle Switch (Copied from app.html) */
+        .theme-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 32px;
+            transition: transform 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--toggle-bg);
+            transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 4px;
+            bottom: 3px;
+            background-color: var(--toggle-circle);
+            transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .icon-sun,
+        .icon-moon {
+            z-index: 1;
+            width: 16px;
+            height: 16px;
+            transition: all 0.4s ease;
+        }
+
+        .icon-sun {
+            color: #fbbf24;
+            /* Amber 400 */
+            margin-right: 4px;
+            opacity: 0;
+            transform: scale(0.5) rotate(-90deg);
+        }
+
+        .icon-moon {
+            color: #cbd5e1;
+            /* Slate 300 */
+            margin-left: 6px;
+            opacity: 1;
+            transform: scale(1) rotate(0);
+        }
+
+        input:checked+.slider .icon-sun {
+            opacity: 1;
+            transform: scale(1) rotate(0);
+        }
+
+        input:checked+.slider .icon-moon {
+            opacity: 0;
+            transform: scale(0.5) rotate(90deg);
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 0.8rem;
@@ -357,7 +494,27 @@
             Retrieva
         </div>
         <div class="nav-links">
-            <a href="#contact" class="nav-cta">Get in Touch</a>
+            <div class="theme-wrapper">
+                <a href="#contact" class="nav-cta">Get in Touch</a>
+
+                <label class="theme-toggle" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="themeCheckbox">
+                    <span class="slider">
+                        <!-- Sun Icon -->
+                        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <!-- Moon Icon -->
+                        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </span>
+                </label>
+            </div>
         </div>
     </nav>
 
@@ -489,6 +646,34 @@
     <footer>
         <p>&copy; 2026 Retrieva. Built by Raj Ghorpade.</p>
     </footer>
+
+    <script>
+        // Theme Logic
+        const themeCheckbox = document.getElementById('themeCheckbox');
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeCheckbox.checked = true;
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeCheckbox.checked = false;
+            }
+        }
+
+        themeCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        initTheme();
+    </script>
 
 </body>
 
